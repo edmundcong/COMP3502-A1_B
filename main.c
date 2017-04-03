@@ -108,8 +108,6 @@ void * attendant_routine(void * noargs)
                     printf("Attendant: Assign one terminal to the customer. The number of free terminals is now %d.\n" , no_of_free_terms);
                     // client use terminal
                     sleep(1);
-                    no_of_free_terms++;
-                    total_uses++;
                 }
                 pthread_mutex_unlock(&terminal_mutex);
             } else { // wait until terminal is free
@@ -146,6 +144,8 @@ void * customer_routine(void * args)
         pthread_cond_signal(&occupy_cond); // signal that we're done with the terminal
         pthread_mutex_unlock(&terminal_mutex);
         printf("Customer %d: I'm finished using the terminal and leaving.\n", customer->ID);
+        no_of_free_terms++;
+        total_uses++;
         pthread_mutex_unlock(&seat_mutex);
         pthread_exit(NULL); // no free seats so leave
     }
