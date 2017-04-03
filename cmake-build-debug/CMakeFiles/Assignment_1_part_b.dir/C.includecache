@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/edmundcong/Documents/Uni/COMP3502-OS_Internals/Assignment_1_part_b/main.c
+pthread.h
+-
+stdbool.h
+-
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+unistd.h
+-
+
