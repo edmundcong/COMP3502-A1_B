@@ -100,15 +100,16 @@ void * attendant_routine(void * noargs)
         {
             printf("Attendant: The number of free seats now is %d. try to find a free terminal.\n", no_of_free_seats);
             if ( no_of_free_terms != 0) { // at least 1 terminal is free
+                // need to fix this -> incorrect no of free terms
                 printf("Attendant: The number of free terminals is %d. There are free terminals now. \n" , no_of_free_terms);
                 pthread_mutex_lock(&terminal_mutex); // since we're changing free term variable
-                for (int i = 0; i < no_of_free_terms; i++) { // get a thread for each free terminal
+                for (int i = no_of_free_terms; i > 0; i--) { // get a thread for each free terminal
                     pthread_cond_signal(&terminal_cond);
-                    no_of_free_terms--;
                     printf("Attendant: Assign one terminal to the customer. The number of free terminals is now %d.\n" , no_of_free_terms);
                     // client use terminal
                     sleep(1);
                 }
+//                no_of_free_terms = 0;
                 pthread_mutex_unlock(&terminal_mutex);
             } else { // wait until terminal is free
                 printf("Attendant: The number of free terminal s is %d. All terminals are occupied. \n" , no_of_free_terms);
@@ -136,6 +137,7 @@ void * customer_routine(void * args)
         printf("Customer %d: I'm lucky to get a free seat from %d.\n", customer->ID, no_of_free_seats);
         pthread_mutex_lock(&terminal_mutex);
         pthread_cond_wait(&terminal_cond, &terminal_mutex); // wait until we can occupy a terminal
+        no_of_free_terms--;
         printf("Customer %d: I'm to be served.\n", customer->ID);
         printf("Customer %d: I'm getting a terminal now.\n", customer->ID);
         no_of_free_seats++;
