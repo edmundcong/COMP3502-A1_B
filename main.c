@@ -154,7 +154,6 @@ void * customer_routine(void * args)
             pthread_cond_wait(&terminal_cond, &terminal_mutex); // wait until we can occupy a terminal
         }
         pthread_mutex_unlock(&consumer_wait_mutex);
-//        no_of_free_terms--;
         printf("Customer %d: I'm to be served.\n", customer->ID);
 //        printf("Customer %d: I'm getting a terminal now.\n", customer->ID);
         pthread_mutex_lock(&occupy_mutex);
@@ -162,7 +161,8 @@ void * customer_routine(void * args)
         pthread_mutex_unlock(&occupy_mutex);
         sleep((int) customer_arrival_rate);
         pthread_cond_signal(&occupy_cond); // signal that we're done with the terminal
-        pthread_mutex_lock(&terminal_mutex);
+        pthread_mutex_trylock(&terminal_mutex);
+//        printf("x: %d\n", x);
         no_of_free_seats++;
         printf("Customer %d: I'm finished using the terminal and leaving.\n", customer->ID);
         no_of_free_terms++;
