@@ -101,27 +101,29 @@ int main(int argc, char ** argv)
 void * attendant_routine(void * noargs)
 {
     while (true) {
-        printf("Attendant: The number of free seats now is %d. try to find a free terminal\n", no_of_free_seats);
-        printf("total %d customers %d\n", total_uses, no_of_customers);
-        if ( no_of_free_terms != 0) { // at least 1 terminal is free
-            printf("Attendant: Assign one terminal to the customer. The number of free terminals is now %d.\n" , no_of_free_terms);
-            ready = 1;
-            pthread_cond_signal(&consumer_wait_cond);
-        } else { // wait until terminal is free
-            printf("Attendant: The number of free terminals is %d. All terminals are occupied\n", no_of_free_terms);
-            pthread_cond_wait(&terminal_cond, &terminal_mutex);
-            printf("Attendant: The number of free terminals is %d. There are free terminals now. \n", no_of_free_terms);
-        }
-        if (no_of_free_seats == no_of_seats) {
+        if (no_of_free_seats == no_of_seats) { // if there are no customers
             printf("Attendant: The number of free seats is %d. No customers and I'm waiting. \n", no_of_free_seats);
+            pthread_mutex_lock(&seat_mutex);
             pthread_cond_wait(&seat_cond, &seat_mutex);
+            pthread_mutex_unlock(&seat_mutex);
         }
-        else if (no_of_free_seats > 0 && no_of_free_seats < no_of_seats) {
-            printf("Attendant: Call one customer. The number of free seats is now %d\n", no_of_free_seats);
+        else {
+            printf("Attendant: The number of free seats now is %d. try to find a free terminal\n", no_of_free_seats);
+            if ( no_of_free_terms > 0) { // at least 1 terminal is free
+                printf("Attendant: Call one customer. The number of free seats is now %d\n", no_of_free_seats);
+                pthread_cond_signal(&consumer_wait_cond);
+                printf("Attendant: Assign one terminal to the customer. The number of free terminals is now %d.\n" , no_of_free_terms);
+            } else { // wait until terminal is free
+                pthread_mutex_lock(&terminal_mutex);
+                printf("Attendant: The number of free terminals is %d. All terminals are occupied\n", no_of_free_terms);
+                pthread_cond_wait(&terminal_cond, &terminal_mutex);
+                printf("Attendant: The number of free terminals is %d. There are free terminals now. \n", no_of_free_terms);
+                pthread_mutex_lock(&terminal_mutex);
+            }
         }
         if (total_uses == no_of_customers) {
             printf("Done!\n");
-            return 130;
+            return 0;
         }
     }
 
@@ -149,14 +151,14 @@ void * customer_routine(void * args)
             pthread_cond_wait(&consumer_wait_cond, &consumer_wait_mutex); // wait until we can occupy a terminal
             pthread_mutex_unlock(&consumer_wait_mutex);
         }
-        printf("Customer %d: I'm getting a terminal now.\n", customer->ID); // can only serve 1 person at a time
         pthread_mutex_lock(&occupy_mutex);
+        printf("Customer %d: I'm getting a terminal now.\n", customer->ID); // can only serve 1 person at a time
         no_of_free_terms--;
         no_of_free_seats++;
         pthread_mutex_unlock(&occupy_mutex);
         sleep((unsigned int) customer->rate);
-        printf("Customer %d: I'm finished using the terminal and leaving.\n", customer->ID); // can finish more than 1 person at a time
         pthread_mutex_lock(&terminal_mutex);
+        printf("Customer %d: I'm finished using the terminal and leaving.\n", customer->ID); // can finish more than 1 person at a time
         no_of_free_terms++;
         total_uses++;
         pthread_mutex_unlock(&terminal_mutex);
